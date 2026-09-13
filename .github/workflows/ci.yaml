@@ -171,7 +171,11 @@ jobs:
           - auth-service
           - catalog-service
           - order-service
-
+    env:
+      REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+      IMAGE_NAME: shopkart/${{ matrix.service }}
+      IMAGE_TAG: ${{ github.sha }}
+      
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
@@ -185,12 +189,13 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build  -t shopkart/${{ matrix.service }}:${{ github.sha }}  services/${{ matrix.service }}
+          docker build  -t "$IMAGE_NAME:$IMAGE_TAG" "services/${{ matrix.service }}"
+
 
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: shopkart/${{ matrix.service }}:${{ github.sha }}
+          image-ref: shopkart/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           format: sarif
           severity: CRITICAL,HIGH,MEDIUM
           exit-code: 0
@@ -214,3 +219,18 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2 
         
+      - name: Tag image for ECR
+        run: |
+          ECR_IMAGE="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+
+          docker tag \
+            "$IMAGE_NAME:$IMAGE_TAG" \
+            "$ECR_IMAGE"
+
+      - name: Push Docker image
+        env:
+          REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+        run: |
+          IMAGE="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+
+          docker push "$ECR_IMAGE"
