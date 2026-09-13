@@ -1,0 +1,53 @@
+name: ShopKart CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - qa
+      - main
+
+  push:
+    branches:
+      - develop
+      - qa
+      - main
+
+jobs:
+  test:
+    name: Test Microservices
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - catalog-service
+          - order-service
+
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-coverage
+          path: services/${{ matrix.service }}/coverage/
