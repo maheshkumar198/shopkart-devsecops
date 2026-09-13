@@ -29,8 +29,13 @@ app.use((req, res, next) => {
   next();
 });
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const redis = new Redis(process.env.REDIS_URL || "redis://redis:6379");
+const pool = process.env.NODE_ENV === "test"
+  ? null
+  : new Pool({ connectionString: process.env.DATABASE_URL });
+
+const redis = process.env.NODE_ENV === "test"
+  ? null
+  : new Redis(process.env.REDIS_URL || "redis://redis:6379");
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 const CATALOG_URL = process.env.CATALOG_URL || "http://catalog-service:3002";
 
