@@ -189,25 +189,25 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build  -t "$IMAGE_NAME:$IMAGE_TAG" "services/${{ matrix.service }}"
+          docker build  -t "shopkart/${{ matrix.service }}:${{ github.sha }}" "services/${{ matrix.service }}"
 
 
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@0.35.0
         with:
-          image-ref: shopkart/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          image-ref: shopkart/${{ matrix.service }}:${{ github.sha }}
           format: sarif
           severity: CRITICAL,HIGH,MEDIUM
           exit-code: 0
           ignore-unfixed: true
-          output: services/${{ matrix.service }}/trivy-report.sarif
+          output: services/${{ matrix.service }}/${{ matrix.service }}-trivy-report.sarif
 
       - name: Upload Trivy SARIF report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: trivy-report-${{ matrix.service }}
-          path: services/${{ matrix.service }}/trivy-report.sarif
+          path: services/${{ matrix.service }}/${{ matrix.service }}-trivy-report.sarif
     
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.2.4
@@ -222,15 +222,8 @@ jobs:
       - name: Tag image for ECR
         run: |
           ECR_IMAGE="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
-
-          docker tag \
-            "$IMAGE_NAME:$IMAGE_TAG" \
-            "$ECR_IMAGE"
+          docker tag "shopkart/${{ matrix.service }}:${{ github.sha }}" "$ECR_IMAGE"
 
       - name: Push Docker image
-        env:
-          REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
         run: |
-          IMAGE="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
-
-          docker push "$ECR_IMAGE"
+            docker push "$ECR_IMAGE"
