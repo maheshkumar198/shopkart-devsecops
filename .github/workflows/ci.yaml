@@ -152,3 +152,45 @@ jobs:
         uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-build-scan:
+    name: Build and Scan ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs:
+      - test
+      - snyk
+      - gitleaks
+      - sonarcube
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - auth-service
+          - catalog-service
+          - order-service
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: services/${{ matrix.service }}/Dockerfile
+          failure-threshold: warning
+
+
+      - name: Build Docker image
+        run: |
+          docker build  -t shopkart/${{ matrix.service }}:${{ github.sha }}  services/${{ matrix.service }}
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: shopkart/${{ matrix.service }}:${{ github.sha }}
+          format: table
+          severity: CRITICAL
+          exit-code: 1
+          ignore-unfixed: true
+    
