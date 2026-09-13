@@ -189,8 +189,14 @@ jobs:
         uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: shopkart/${{ matrix.service }}:${{ github.sha }}
-          format: table
+          format: sarif
           severity: CRITICAL,HIGH,MEDIUM
           exit-code: 0
           ignore-unfixed: true
-    
+          output: services/${{ matrix.service }}/trivy-report.sarif
+          
+      - name: Upload Trivy SARIF report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: services/${{ matrix.service }}/trivy-report.sarif
+      
