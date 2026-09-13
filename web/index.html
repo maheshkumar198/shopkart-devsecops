@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ShopKart — Smart Shopping</title>
+<style>
+:root{--bg:#f6f7fb;--surface:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-dark:#4338ca;--success:#059669;--danger:#dc2626;--shadow:0 10px 30px rgba(17,24,39,.08)}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#f7f7ff 0%,var(--bg) 38%);color:var(--text)}
+button,input{font:inherit}
+button{border:0;cursor:pointer}
+.header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(229,231,235,.9)}
+.header-inner{max-width:1200px;margin:auto;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.brand{display:flex;align-items:center;gap:10px;min-width:max-content}
+.brand-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:grid;place-items:center;color:#fff;font-weight:900;box-shadow:0 8px 20px rgba(79,70,229,.3)}
+.brand h1{font-size:19px;margin:0;letter-spacing:-.02em}
+.brand small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+.nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.nav-btn{position:relative;background:transparent;color:#4b5563;padding:10px 13px;border-radius:10px;font-weight:700;transition:.18s}
+.nav-btn:hover{background:#f3f4f6;color:var(--text)}
+.nav-btn.active{background:#eef2ff;color:var(--primary)}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:5px;border-radius:999px;background:#111827;color:#fff;font-size:11px}
+.user-chip{display:flex;align-items:center;gap:9px;margin-left:4px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}
+.avatar{width:30px;height:30px;border-radius:50%;background:#e0e7ff;color:#3730a3;display:grid;place-items:center;font-size:12px;font-weight:800}
+.user-copy{display:none;line-height:1.15}.user-copy b{display:block;font-size:12px}.user-copy span{font-size:10px;color:var(--muted)}
+main{max-width:1200px;margin:0 auto;padding:28px 22px 60px}
+.view{display:none}.view.active{display:block}
+.hero{display:grid;grid-template-columns:1.45fr .9fr;gap:18px;margin-bottom:22px}
+.hero-main,.hero-side{border-radius:22px;padding:28px;box-shadow:var(--shadow);overflow:hidden;position:relative}
+.hero-main{background:linear-gradient(135deg,#111827 0%,#312e81 56%,#4f46e5 100%);color:#fff}
+.hero-main:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-70px;top:-80px;background:rgba(255,255,255,.12)}
+.hero-kicker{font-size:12px;text-transform:uppercase;letter-spacing:.13em;font-weight:800;opacity:.75}
+.hero h2{font-size:clamp(28px,4vw,44px);line-height:1.02;margin:10px 0 10px;letter-spacing:-.04em;max-width:700px}
+.hero p{margin:0;color:#dbeafe;max-width:620px;line-height:1.6}
+.hero-side{background:var(--surface);border:1px solid var(--line)}
+.stat{padding:12px 0;border-bottom:1px solid var(--line)}.stat:last-child{border-bottom:0}.stat b{font-size:26px}.stat span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px}
+.panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}.panel-head h2,.panel-head h3{margin:0;font-size:22px;letter-spacing:-.03em}.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.product-card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;transition:.2s;box-shadow:0 4px 14px rgba(17,24,39,.04)}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(17,24,39,.1)}
+.product-art{height:150px;display:grid;place-items:center;background:linear-gradient(135deg,#eef2ff,#f5f3ff);font-size:54px}
+.product-body{padding:17px;display:flex;flex-direction:column;gap:8px;flex:1}.product-name{font-size:16px;font-weight:800}.product-meta{font-size:12px;color:var(--muted)}
+.price-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:8px}.price{font-size:20px;font-weight:900;letter-spacing:-.02em}.stock{font-size:11px;color:var(--success);font-weight:800}
+.primary{background:var(--primary);color:#fff;padding:11px 15px;border-radius:10px;font-weight:800;transition:.18s}.primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.secondary{background:#f3f4f6;color:#374151;padding:11px 15px;border-radius:10px;font-weight:800}.secondary:hover{background:#e5e7eb}
+.danger{background:#fee2e2;color:#b91c1c;padding:9px 12px;border-radius:9px;font-weight:800}.danger:hover{background:#fecaca}
+.auth-wrap{max-width:460px;margin:36px auto}.auth-brand{text-align:center;margin-bottom:18px}.auth-brand .brand-icon{margin:auto}.auth-brand h2{margin:12px 0 5px;font-size:30px}.auth-brand p{margin:0;color:var(--muted)}
+.form{display:grid;gap:12px}.field label{display:block;font-size:12px;font-weight:800;color:#4b5563;margin:0 0 6px}.field input{width:100%;padding:12px 13px;border:1px solid #d1d5db;border-radius:10px;outline:none;background:#fff}.field input:focus{border-color:#818cf8;box-shadow:0 0 0 4px #eef2ff}.form-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.notice{min-height:20px;font-size:13px;margin:2px 0 0}.error{color:#b91c1c}.success{color:#047857}
+.cart-layout{display:grid;grid-template-columns:1.4fr .7fr;gap:18px}.cart-list{display:grid;gap:10px}.cart-item{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:14px}.cart-thumb{width:54px;height:54px;border-radius:12px;background:#eef2ff;display:grid;place-items:center;font-size:25px}.cart-item h4{margin:0 0 4px}.cart-item p{margin:0;color:var(--muted);font-size:12px}.cart-price{text-align:right}.cart-price b{display:block;margin-bottom:7px}.summary{position:sticky;top:88px}.summary-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)}.summary-row.total{border-bottom:0;font-size:21px;font-weight:900;padding-top:15px}.summary .primary{width:100%;margin-top:14px}
+.order-list{display:grid;gap:12px}.order-card{padding:18px;border:1px solid var(--line);border-radius:15px;display:flex;align-items:center;justify-content:space-between;gap:15px}.status{display:inline-flex;padding:5px 9px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:11px;font-weight:900}
+.empty{padding:40px 20px;text-align:center;border:1px dashed #d1d5db;border-radius:14px;background:#fafafa}.empty-icon{font-size:42px}.empty h3{margin:10px 0 5px}.empty p{margin:0 0 16px;color:var(--muted)}
+.toast{position:fixed;right:20px;bottom:20px;z-index:50;background:#111827;color:#fff;padding:13px 16px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.2);opacity:0;transform:translateY(15px);pointer-events:none;transition:.25s;font-size:13px}.toast.show{opacity:1;transform:translateY(0)}
+.loading{text-align:center;padding:26px;color:var(--muted)}
+@media (min-width:900px){.user-copy{display:block}}
+@media (max-width:850px){.hero,.cart-layout{grid-template-columns:1fr}.summary{position:static}.hero-side{display:none}.header-inner{padding:12px 14px}.nav-btn{padding:9px 8px;font-size:12px}.user-chip{display:none}}
+@media (max-width:560px){main{padding:18px 12px 40px}.hero-main{padding:22px}.panel{padding:15px}.grid{grid-template-columns:1fr 1fr;gap:10px}.product-art{height:120px;font-size:44px}.product-body{padding:13px}.product-name{font-size:14px}.price{font-size:17px}.product-card .primary{width:100%;padding:9px}.cart-item{grid-template-columns:auto 1fr}.cart-price{grid-column:2;text-align:left}.form-actions{grid-template-columns:1fr}.nav{gap:2px}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-icon">S</div>
+      <div><h1>ShopKart</h1><small>Simple. Fast. Secure.</small></div>
+    </div>
+    <nav class="nav">
+      <button id="shopBtn" class="nav-btn" data-view="shop">Shop</button>
+      <button id="cartBtn" class="nav-btn" data-view="cart">Cart <span id="cartCount" class="badge">0</span></button>
+      <button id="ordersBtn" class="nav-btn" data-view="orders">My Orders</button>
+      <div id="userChip" class="user-chip hidden">
+        <div id="avatar" class="avatar">U</div>
+        <div class="user-copy"><b id="userName">User</b><span id="userEmail">user@example.com</span></div>
+      </div>
+      <button id="authBtn" class="nav-btn">Login</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="authView" class="view">
+    <div class="auth-wrap">
+      <div class="auth-brand">
+        <div class="brand-icon">S</div>
+        <h2>Welcome to ShopKart</h2>
+        <p>Login or create your account to start shopping.</p>
+      </div>
+      <div class="panel">
+        <div class="form">
+          <div class="field"><label for="name">NAME</label><input id="name" placeholder="Your name"></div>
+          <div class="field"><label for="email">EMAIL</label><input id="email" placeholder="you@example.com" type="email"></div>
+          <div class="field"><label for="password">PASSWORD</label><input id="password" placeholder="Minimum 6 characters" type="password"></div>
+          <div class="form-actions"><button id="registerBtn" class="secondary">Create account</button><button id="loginBtn" class="primary">Login</button></div>
+          <div id="authMessage" class="notice"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="shopView" class="view">
+    <div class="hero">
+      <div class="hero-main">
+        <div class="hero-kicker">Your everyday store</div>
+        <h2>Everything you need, in one simple cart.</h2>
+        <p>Browse products, add what you like, checkout securely, and keep track of your orders.</p>
+      </div>
+      <div class="hero-side">
+        <div class="stat"><b id="productStat">0</b><span>Products available</span></div>
+        <div class="stat"><b id="cartStat">0</b><span>Items in your cart</span></div>
+        <div class="stat"><b>24×7</b><span>Digital shopping experience</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Featured products</h2><div class="muted">Choose a product and add it to your cart.</div></div></div>
+      <div id="products" class="grid"><div class="loading">Loading products...</div></div>
+    </div>
+  </section>
+
+  <section id="cartView" class="view">
+    <div class="panel-head"><div><h2>Your Cart</h2><div class="muted">Review your items before checkout.</div></div><button id="continueShoppingBtn" class="secondary">← Continue shopping</button></div>
+    <div class="cart-layout">
+      <div class="panel"><div id="cartItems" class="cart-list"></div></div>
+      <div class="panel summary"><h3>Order Summary</h3><div class="summary-row"><span>Items</span><b id="summaryItems">0</b></div><div class="summary-row"><span>Subtotal</span><b id="summarySubtotal">₹0.00</b></div><div class="summary-row"><span>Delivery</span><b>FREE</b></div><div class="summary-row total"><span>Total</span><span id="summaryTotal">₹0.00</span></div><button id="checkoutBtn" class="primary">Checkout</button><p id="cartMessage" class="notice"></p></div>
+    </div>
+  </section>
+
+  <section id="ordersView" class="view">
+    <div class="panel-head"><div><h2>My Orders</h2><div class="muted">See your previous purchases and order details.</div></div></div>
+    <div class="panel"><div id="orders" class="order-list"></div></div>
+  </section>
+
+  <section id="orderDetailView" class="view">
+    <div class="panel-head"><div><h2>Order Details</h2><div class="muted">Complete information for this order.</div></div><button id="backOrdersBtn" class="secondary">← Back to orders</button></div>
+    <div class="panel"><div id="orderDetail"></div></div>
+  </section>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const api = "/api";
+let token = localStorage.getItem("shopkart_token");
+let user = JSON.parse(localStorage.getItem("shopkart_user") || "null");
+let productsById = new Map();
+
+async function call(path, options={}) {
+  options.headers = {...(options.headers||{}), "Content-Type":"application/json"};
+  if (token) options.headers.Authorization = `Bearer ${token}`;
+  const r = await fetch(api + path, options);
+  const body = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(body.error || "Request failed");
+  return body;
+}
+
+function setAuth(body){
+  token=body.token; user=body.user;
+  localStorage.setItem("shopkart_token",token);
+  localStorage.setItem("shopkart_user",JSON.stringify(user));
+  updateUserUI();
+  showView("shop");
+  loadProducts();
+  loadCart();
+}
+
+function updateUserUI(){
+  const chip=document.getElementById("userChip");
+  const authBtn=document.getElementById("authBtn");
+  if(token&&user){
+    chip.classList.remove("hidden");
+    document.getElementById("userName").textContent=user.name || "User";
+    document.getElementById("userEmail").textContent=user.email || "";
+    document.getElementById("avatar").textContent=(user.name||"U").slice(0,1).toUpperCase();
+    authBtn.textContent="Logout";
+  } else {
+    chip.classList.add("hidden"); authBtn.textContent="Login";
+  }
+}
+
+function showView(name){
+  if(!token && name!=="auth"){name="auth";}
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById(name+"View").classList.add("active");
+  document.querySelectorAll(".nav-btn[data-view]").forEach(b=>b.classList.toggle("active",b.dataset.view===name));
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(name==="cart") loadCart();
+  if(name==="orders") loadOrders();
+}
+
+function showToast(message){
+  const toast=document.getElementById("toast"); toast.textContent=message; toast.classList.add("show");
+  clearTimeout(window.toastTimer); window.toastTimer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+async function register(){
+  try{
+    const body=await call("/auth/register",{method:"POST",body:JSON.stringify({name:document.getElementById("name").value,email:document.getElementById("email").value,password:document.getElementById("password").value})});
+    document.getElementById("authMessage").textContent="Account created successfully"; document.getElementById("authMessage").className="notice success";
+    setAuth(body);
+  }catch(e){const el=document.getElementById("authMessage");el.textContent=e.message;el.className="notice error";}
+}
+
+async function login(){
+  try{
+    const body=await call("/auth/login",{method:"POST",body:JSON.stringify({email:document.getElementById("email").value,password:document.getElementById("password").value})});
+    setAuth(body);
+  }catch(e){const el=document.getElementById("authMessage");el.textContent=e.message;el.className="notice error";}
+}
+
+async function loadProducts(){
+  try{
+    const body=await call("/products");
+    productsById=new Map(body.data.map(p=>[Number(p.id),p]));
+    document.getElementById("productStat").textContent=body.data.length;
+    document.getElementById("products").innerHTML=body.data.map(p=>`
+      <article class="product-card">
+        <div class="product-art">${productEmoji(p.name)}</div>
+        <div class="product-body">
+          <div class="product-name">${escapeHtml(p.name)}</div>
+          <div class="product-meta">Quality product · SKU #${p.id}</div>
+          <div class="price-row"><div><div class="price">₹${Number(p.price).toFixed(2)}</div><div class="stock">${p.stock>0?p.stock+" in stock":"Out of stock"}</div></div><button class="primary" ${p.stock<=0?"disabled":""} onclick="addToCart(${p.id})">Add to cart</button></div>
+        </div>
+      </article>`).join("");
+  }catch(e){document.getElementById("products").innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load products</h3><p>${escapeHtml(e.message)}</p><button class="primary" onclick="loadProducts()">Retry</button></div>`;}
+}
+
+async function addToCart(productId){
+  try{
+    await call("/cart/items",{method:"POST",body:JSON.stringify({productId,quantity:1})});
+    await loadCart();
+    showToast("Product added to cart");
+  }catch(e){showToast(e.message);}
+}
+
+async function loadCart(){
+  if(!token)return;
+  try{
+    const body=await call("/cart");
+    const items=body.items||[];
+    const count=items.reduce((n,i)=>n+i.quantity,0);
+    document.getElementById("cartCount").textContent=count;
+    document.getElementById("cartStat").textContent=count;
+    document.getElementById("summaryItems").textContent=count;
+    let subtotal=0;
+    items.forEach(i=>{const p=productsById.get(Number(i.productId)); subtotal += p ? Number(p.price)*i.quantity : 0;});
+    document.getElementById("summarySubtotal").textContent=`₹${subtotal.toFixed(2)}`;
+    document.getElementById("summaryTotal").textContent=`₹${subtotal.toFixed(2)}`;
+    const wrap=document.getElementById("cartItems");
+    if(!items.length){
+      wrap.innerHTML=`<div class="empty"><div class="empty-icon">🛒</div><h3>Your cart is empty</h3><p>Add some products and they will appear here.</p><button class="primary" onclick="showView('shop')">Start shopping</button></div>`;
+      document.getElementById("checkoutBtn").disabled=true;
+      return;
+    }
+    document.getElementById("checkoutBtn").disabled=false;
+    wrap.innerHTML=items.map(i=>{
+      const p=productsById.get(Number(i.productId));
+      const name=p?p.name:`Product #${i.productId}`;
+      const price=p?Number(p.price):0;
+      return `<div class="cart-item"><div class="cart-thumb">${productEmoji(name)}</div><div><h4>${escapeHtml(name)}</h4><p>₹${price.toFixed(2)} each · Quantity ${i.quantity}</p></div><div class="cart-price"><b>₹${(price*i.quantity).toFixed(2)}</b><button class="danger" onclick="removeCart(${i.productId})">Remove</button></div></div>`;
+    }).join("");
+  }catch(e){document.getElementById("cartItems").innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load cart</h3><p>${escapeHtml(e.message)}</p></div>`;}
+}
+
+async function removeCart(id){
+  try{await call(`/cart/items/${id}`,{method:"DELETE"}); await loadCart(); showToast("Removed from cart");}
+  catch(e){showToast(e.message);}
+}
+
+async function checkout(){
+  try{
+    document.getElementById("checkoutBtn").disabled=true;
+    const body=await call("/orders",{method:"POST",body:JSON.stringify({})});
+    const msg=document.getElementById("cartMessage");msg.textContent=`Order #${body.id} confirmed`;msg.className="notice success";
+    await loadCart();
+    showToast("Order placed successfully");
+    setTimeout(()=>showOrder(body.id),350);
+  }catch(e){
+    const msg=document.getElementById("cartMessage");msg.textContent=e.message;msg.className="notice error";
+    document.getElementById("checkoutBtn").disabled=false;
+  }
+}
+
+async function loadOrders(){
+  if(!token)return showView("auth");
+  try{
+    const body=await call("/orders");
+    document.getElementById("orders").innerHTML=body.data.length?body.data.map(o=>`<div class="order-card"><div><strong>Order #${o.id}</strong><div class="muted" style="font-size:12px;margin-top:5px">${o.created_at?new Date(o.created_at).toLocaleString():""}</div></div><div style="text-align:right"><span class="status">${escapeHtml(o.status)}</span><div style="font-weight:900;margin:8px 0">₹${Number(o.total).toFixed(2)}</div><button class="secondary" onclick="showOrder(${o.id})">View details</button></div></div>`).join(""):`<div class="empty"><div class="empty-icon">📦</div><h3>No orders yet</h3><p>Your completed purchases will appear here.</p><button class="primary" onclick="showView('shop')">Shop now</button></div>`;
+  }catch(e){document.getElementById("orders").innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load orders</h3><p>${escapeHtml(e.message)}</p></div>`;}
+}
+
+async function showOrder(id){
+  if(!token)return showView("auth");
+  try{
+    showView("orderDetail");
+    document.getElementById("orderDetail").innerHTML='<div class="loading">Loading order...</div>';
+    const o=await call(`/orders/${id}`);
+    document.getElementById("orderDetail").innerHTML=`<div style="display:grid;gap:16px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><div class="muted" style="font-size:12px">ORDER</div><div style="font-size:26px;font-weight:900">#${o.id}</div></div><div style="text-align:right"><span class="status">${escapeHtml(o.status)}</span><div style="font-size:24px;font-weight:900;margin-top:6px">₹${Number(o.total).toFixed(2)}</div></div></div><div style="border-top:1px solid var(--line);padding-top:14px"><h3>Items</h3>${o.items.map(i=>{const name=productsById.get(Number(i.product_id))?.name||`Product #${i.product_id}`;return `<div class="cart-item" style="margin-top:10px"><div class="cart-thumb">${productEmoji(name)}</div><div><h4>${escapeHtml(name)}</h4><p>Quantity ${i.quantity}</p></div><div class="cart-price"><b>₹${Number(i.unit_price).toFixed(2)}</b></div></div>`}).join("")}</div></div>`;
+  }catch(e){document.getElementById("orderDetail").innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load order</h3><p>${escapeHtml(e.message)}</p></div>`;}
+}
+
+function productEmoji(name){
+  const n=String(name).toLowerCase();
+  if(n.includes("phone")||n.includes("mobile"))return "📱";
+  if(n.includes("laptop")||n.includes("computer"))return "💻";
+  if(n.includes("head"))return "🎧";
+  if(n.includes("shoe"))return "👟";
+  if(n.includes("watch"))return "⌚";
+  if(n.includes("book"))return "📚";
+  return "🛍️";
+}
+
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function logout(){token=null;user=null;localStorage.removeItem("shopkart_token");localStorage.removeItem("shopkart_user");updateUserUI();document.getElementById("cartCount").textContent="0";showView("auth");}
+
+document.getElementById("registerBtn").onclick=register;
+document.getElementById("loginBtn").onclick=login;
+document.getElementById("shopBtn").onclick=()=>showView("shop");
+document.getElementById("cartBtn").onclick=()=>showView("cart");
+document.getElementById("ordersBtn").onclick=()=>showView("orders");
+document.getElementById("checkoutBtn").onclick=checkout;
+document.getElementById("continueShoppingBtn").onclick=()=>showView("shop");
+document.getElementById("backOrdersBtn").onclick=()=>showView("orders");
+document.getElementById("authBtn").onclick=()=>token?logout():showView("auth");
+
+updateUserUI();
+if(token&&user){showView("shop");loadProducts();loadCart();}else showView("auth");
+</script>
+</body>
+</html>

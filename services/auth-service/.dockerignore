@@ -1,0 +1,4 @@
+node_modules
+automation
+coverage
+npm-debug.log*

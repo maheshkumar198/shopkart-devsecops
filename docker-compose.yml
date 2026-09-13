@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: shopkart
+      POSTGRES_PASSWORD: shopkart
+      POSTGRES_DB: shopkart
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgres://shopkart:shopkart@postgres:5432/shopkart
+      JWT_SECRET: change-this-in-lab
+    depends_on:
+      - postgres
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DATABASE_URL: postgres://shopkart:shopkart@postgres:5432/shopkart
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      DATABASE_URL: postgres://shopkart:shopkart@postgres:5432/shopkart
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: change-this-in-lab
+      CATALOG_URL: http://catalog-service:3002
+    depends_on:
+      - postgres
+      - redis
+      - catalog-service
+    ports:
+      - "3003:3003"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    depends_on:
+      - auth-service
+      - catalog-service
+      - order-service
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
