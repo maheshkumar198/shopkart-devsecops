@@ -219,11 +219,10 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2 
         
-      - name: Tag image for ECR
+      - name: Tag image and push to ECR
         run: |
           ECR_IMAGE="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
           docker tag "shopkart/${{ matrix.service }}:${{ github.sha }}" "$ECR_IMAGE"
+          docker push "$ECR_IMAGE"
 
-      - name: Push Docker image
-        run: |
-            docker push "$ECR_IMAGE"
+    
