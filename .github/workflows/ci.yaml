@@ -163,11 +163,6 @@ jobs:
       contents: read
       id-token: write
     runs-on: ubuntu-latest
-    needs:
-      - test
-      - snyk
-      - gitleaks
-      - sonarcube
 
     strategy:
       fail-fast: false
@@ -210,10 +205,11 @@ jobs:
           path: services/${{ matrix.service }}/trivy-report.sarif
     
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6.2.4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-action-ecr-role 
           aws-region: ap-south-1
+          audience: sts.amazonaws.com
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2 
