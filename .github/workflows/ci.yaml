@@ -157,6 +157,7 @@ jobs:
 
   docker-build-scan:
     name: Build and Scan ${{ matrix.service }}
+    environment: development
     permissions:
       contents: read
       id-token: write
