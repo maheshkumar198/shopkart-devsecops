@@ -129,7 +129,7 @@ jobs:
         with:
           command: test
           args: --file=services/${{ matrix.service }}/package.json --severity-threshold=high
-          
+
       - name: Snyk monitor
         uses: snyk/actions/node@master
         env:
@@ -137,3 +137,18 @@ jobs:
         with:
           command: monitor
           args: --file=services/${{ matrix.service }}/package.json
+
+  gitleaks:
+    name: Gitleaks Secret Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
