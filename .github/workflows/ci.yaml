@@ -13,6 +13,8 @@ on:
       - qa
       - main
 
+
+
 jobs:
   test:
     name: Test Microservices
@@ -155,6 +157,9 @@ jobs:
 
   docker-build-scan:
     name: Build and Scan ${{ matrix.service }}
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     needs:
       - test
