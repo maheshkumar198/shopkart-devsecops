@@ -201,5 +201,14 @@ jobs:
         with:
           name: trivy-report-${{ matrix.service }}
           path: services/${{ matrix.service }}/trivy-report.sarif
+    
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-action-ecr-role 
+          aws-region: ap-south-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2 
         
       
