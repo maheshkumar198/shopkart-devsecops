@@ -129,3 +129,11 @@ jobs:
         with:
           command: test
           args: --file=services/${{ matrix.service }}/package.json --severity-threshold=high
+          
+      - name: Snyk monitor
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --file=services/${{ matrix.service }}/package.json
