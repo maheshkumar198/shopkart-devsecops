@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -47,7 +47,46 @@ jobs:
         run: npm test -- --coverage
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.service }}-coverage
           path: services/${{ matrix.service }}/coverage/
+
+  sonarcube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7   
+
+      - name: Download auth coverage
+        uses: actions/download-artifact@v7
+        with:
+          name: auth-service-coverage
+          path: services/auth-service/coverage
+
+      - name: Download catalog coverage
+        uses: actions/download-artifact@v7
+        with:
+          name: catalog-service-coverage
+          path: services/catalog-service/coverage
+
+      - name: Download order coverage
+        uses: actions/download-artifact@v7
+        with:
+          name: order-service-coverage
+          path: services/order-service/coverage
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
