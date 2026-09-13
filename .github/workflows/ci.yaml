@@ -221,7 +221,7 @@ jobs:
         
       - name: Tag image and push to ECR
         run: |
-          ECR_IMAGE="$REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+          ECR_IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
           docker tag "shopkart/${{ matrix.service }}:${{ github.sha }}" "$ECR_IMAGE"
           docker push "$ECR_IMAGE"
 
