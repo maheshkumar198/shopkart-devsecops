@@ -1,0 +1,61 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "web/**"
+      - ".github/workflows/frontend.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+  IMAGE_NAME: shopkart/frontend
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: development
+    permissions:
+      contents: read
+      id-token: write
+  
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: web/Dockerfile
+          failure-threshold: warning
+
+
+      - name: Build Docker image
+        run: |
+          docker build  -t "shopkart/frontend:${{ github.sha }}" "web"
+
+    
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.2.4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-action-ecr-role 
+          aws-region: ap-south-1
+          audience: sts.amazonaws.com
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2 
+        
+      - name: Tag image and push to ECR
+        run: |
+    
+          ECR_IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+          docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${ECR_IMAGE}"
+          docker push "${ECR_IMAGE}"
+
+    
