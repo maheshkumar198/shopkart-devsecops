@@ -31,7 +31,16 @@ app.use((req, res, next) => {
 
 const pool = process.env.NODE_ENV === "test"
   ? null
-  : new Pool({ connectionString: process.env.DATABASE_URL });
+  : new Pool({
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      database: process.env.DB_NAME,
+      user: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
 
 const redis = process.env.NODE_ENV === "test"
   ? null
