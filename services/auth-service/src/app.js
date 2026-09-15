@@ -21,7 +21,14 @@ const requests = new client.Counter({
 app.use(express.json());
 app.use(pinoHttp({ logger }));
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD
+});
+
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
 function tokenFor(user) {
