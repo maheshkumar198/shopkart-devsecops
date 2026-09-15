@@ -39,7 +39,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build  -t "shopkart/frontend:${{ github.sha }}" "web"
-
+          
     
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.2.4
@@ -57,5 +57,7 @@ jobs:
           ECR_IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
           docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${ECR_IMAGE}"
           docker push "${ECR_IMAGE}"
+          docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${REGISTRY}/${IMAGE_NAME}:latest"
+          docker push "${REGISTRY}/${IMAGE_NAME}:latest"
 
     
