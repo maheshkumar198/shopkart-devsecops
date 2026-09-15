@@ -225,5 +225,6 @@ jobs:
           ECR_IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
           docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${ECR_IMAGE}"
           docker push "${ECR_IMAGE}"
-
+          docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${REGISTRY}/${IMAGE_NAME}:latest"
+          docker push "${REGISTRY}/${IMAGE_NAME}:latest"
     
