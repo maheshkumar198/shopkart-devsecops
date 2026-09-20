@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: redis-pvc
+  namespace: {{ .Values.namespace }}
+
+spec:
+  storageClassName: {{ .Values.redis.storage.storageClass }}
+
+  accessModes:
+    - ReadWriteOnce
+
+  resources:
+    requests:
+      storage: {{ .Values.redis.storage.size }}

@@ -1,0 +1,16 @@
+namespace: shopkart-dev
+
+config:
+  NODE_ENV: production
+  DB_HOST: shopkart-dev-postgres.c7qqm8eoycgr.ap-south-1.rds.amazonaws.com
+  DB_PORT: "5432"
+  DB_NAME: shopkart
+
+externalSecrets:
+  aws:
+    secretStoreName: aws-secrets-manager
+
+  db:
+    secretName: shopkart-db-secret
+    refreshInterval: 1h
+    remoteKey: "arn:aws:secretsmanager:ap-south-1:905179308072:secret:rds!db-906ae1d3-eac2-49e1-98ed-88485c81df0a-q5nZ8U"

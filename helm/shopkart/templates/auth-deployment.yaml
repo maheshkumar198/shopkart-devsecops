@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: {{ .Release.Name }}-auth
+  namespace: {{ .Values.namespace }}
+
+spec:
+  replicas: {{ .Values.auth.replicas }}
+
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-auth
+
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-auth
+
+    spec:
+      containers:
+
+        - name: auth-service
+
+          image: "{{ .Values.auth.image.repository }}:{{ .Values.auth.image.tag }}"
+
+          imagePullPolicy: {{ .Values.auth.image.pullPolicy }}
+
+          ports:
+            - containerPort: {{ .Values.auth.port }}
+
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: shopkart-config
+                  key: NODE_ENV
+
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: shopkart-config
+                  key: DB_HOST
+
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: shopkart-config
+                  key: DB_PORT
+
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: shopkart-config
+                  key: DB_NAME
+
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: shopkart-db-secret
+                  key: DB_USERNAME
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopkart-db-secret
+                  key: DB_PASSWORD
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shopkart-secret
+                  key: JWT_SECRET
+
+          resources:
+            {{- toYaml .Values.auth.resources | nindent 12 }}
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.auth.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.auth.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 20

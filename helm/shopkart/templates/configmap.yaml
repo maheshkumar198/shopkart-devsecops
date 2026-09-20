@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopkart-config
+  namespace: {{ .Values.namespace }}
+data:
+  NODE_ENV: {{ .Values.configmap.NODE_ENV | quote }}
+  DB_HOST: {{ .Values.configmap.DB_HOST | quote }}
+  DB_PORT: {{ .Values.configmap.DB_PORT | quote }}
+  DB_NAME: {{ .Values.configmap.DB_NAME | quote }}

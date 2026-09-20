@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: {{ .Release.Name }}-catalog
+
+spec:
+  replicas: {{ .Values.catalog.replicas }}
+
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-catalog
+
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-catalog
+
+    spec:
+      containers:
+        - name: catalog
+          image: "{{ .Values.catalog.image.repository }}:{{ .Values.catalog.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.catalog.port }}
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: shopkart-config
+                  key: NODE_ENV
+
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: shopkart-config
+                  key: DB_HOST
+
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: shopkart-config
+                  key: DB_PORT
+
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: shopkart-config
+                  key: DB_NAME
+
+            - name: DB_USERNAME
+              valueFrom:
+                  secretKeyRef:
+                    name: shopkart-db-secret
+                    key: DB_USERNAME
+ 
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopkart-db-secret
+                  key: DB_PASSWORD
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shopkart-secret
+                  key: JWT_SECRET
+
+          resources:
+            {{- toYaml .Values.catalog.resources | nindent 12 }}
