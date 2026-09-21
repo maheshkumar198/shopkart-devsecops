@@ -14,6 +14,7 @@ spec:
     app: order-service
 
   ports:
-    - port: {{ .Values.order.port }}
+    - name: http
+      port: {{ .Values.order.port }}
       targetPort: {{ .Values.order.port }}
       protocol: TCP

@@ -12,7 +12,9 @@ spec:
     app: {{ .Release.Name }}-auth
 
   ports:
-    - port: {{ .Values.auth.port }}
+
+    - name: http
+      port: {{ .Values.auth.port }}
       targetPort: {{ .Values.auth.port }}
 
   type: ClusterIP

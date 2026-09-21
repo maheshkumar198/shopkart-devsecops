@@ -12,6 +12,7 @@ spec:
     app: {{ .Release.Name }}-catalog
 
   ports:
-    - port: 3002
+    - name: http
+      port: 3002
       targetPort: 3002
       protocol: TCP
