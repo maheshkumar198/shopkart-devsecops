@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: catalog-service
   namespace: {{ .Values.namespace }}
+  labels:
+    app: catalog-service
 spec:
   type: ClusterIP
 
