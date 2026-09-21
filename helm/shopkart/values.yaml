@@ -111,3 +111,13 @@ frontend:
       memory: 256Mi
 
 jwtSecret: dtqwqdiwqu1274214871572849217qwcuuiq1243146351278548712asdkgasduadsukfw
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+
+    services:
+      - name: auth-service
+      - name: catalog-service
+      - name: order-service
