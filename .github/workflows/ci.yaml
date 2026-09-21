@@ -1,18 +1,12 @@
 name: ShopKart CI
 
 on:
+  workflow_dispatch: 
   pull_request:
     branches:
       - develop
       - qa
       - main
-
-  push:
-    branches:
-      - develop
-      - qa
-      - main
-
 
 
 jobs:
