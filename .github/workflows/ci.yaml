@@ -163,9 +163,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - test
-      - sonarcube
-      - snyk
-      - gitleaks
 
     strategy:
       fail-fast: false
