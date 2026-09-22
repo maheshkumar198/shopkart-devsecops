@@ -1,14 +1,3 @@
-## File 2: `Document/ARCHITECTURE.md`
-
-Create:
-
-```text
-Document/ARCHITECTURE.md
-```
-
-Use this content:
-
-````markdown
 # ShopKart Architecture
 
 ## 1. Overview
@@ -793,13 +782,3 @@ The project follows these architectural principles:
 * [Troubleshooting](TROUBLESHOOTING.md)
 
 ````
-
-### Add this file here
-
-```text
-shopkart-devsecops/
-└── Document/
-    └── ARCHITECTURE.md
-````
-
-**Next file: `Document/CI-CD.md`.**
