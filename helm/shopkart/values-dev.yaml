@@ -13,4 +13,4 @@ externalSecrets:
   db:
     secretName: shopkart-db-secret
     refreshInterval: 1h
-    remoteKey: "arn:aws:secretsmanager:ap-south-1:905179308072:secret:rds!db-fd3db08c-32ec-4f74-a2a5-5808f15b8c79-IPmdIo"
+    remoteKey: "arn:aws:secretsmanager:ap-south-1:905179308072:secret:rds!db-644f9115-a510-47be-9f82-d861b91209c1-SlVumz"
