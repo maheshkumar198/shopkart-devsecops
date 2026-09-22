@@ -1,32 +1,112 @@
+const crypto = require("crypto");
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const pino = require("pino");
 const pinoHttp = require("pino-http");
 const client = require("prom-client");
-const Redis = require("ioredis");
-const { Pool } = require("pg");
 
 const app = express();
-const logger = pino({ base: { service: "order-service" } });
+const SERVICE_NAME = "order-service";
+const APP_VERSION = process.env.APP_VERSION || process.env.GIT_SHA || "unknown";
+const ENVIRONMENT = process.env.NODE_ENV || "production";
+
+const logger = pino({
+  base: { service: SERVICE_NAME, environment: ENVIRONMENT, version: APP_VERSION },
+  redact: ["req.headers.authorization", "req.headers.cookie"]
+});
+
 const register = new client.Registry();
-client.collectDefaultMetrics({ register });
+client.collectDefaultMetrics({ register, prefix: "shopkart_" });
 
 const requests = new client.Counter({
-  name: "http_requests_total",
-  help: "Total HTTP requests",
+  name: "shopkart_http_requests_total",
+  help: "Total HTTP requests processed by the service",
+  labelNames: ["method", "route", "status_code"],
+  registers: [register]
+});
+
+const duration = new client.Histogram({
+  name: "shopkart_http_request_duration_seconds",
+  help: "HTTP request duration in seconds",
+  labelNames: ["method", "route", "status_code"],
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
+  registers: [register]
+});
+
+const inFlight = new client.Gauge({
+  name: "shopkart_http_requests_in_flight",
+  help: "Current number of HTTP requests being processed",
+  registers: [register]
+});
+
+const errors = new client.Counter({
+  name: "shopkart_http_errors_total",
+  help: "Total HTTP responses with status code 400 or higher",
   labelNames: ["method", "route", "status_code"],
   registers: [register]
 });
 
 app.use(express.json());
-app.use(pinoHttp({ logger }));
+app.use(pinoHttp({
+  logger,
+  genReqId: (req) => req.headers["x-request-id"] || crypto.randomUUID(),
+  autoLogging: { ignore: (req) => req.url === "/metrics" },
+  customProps: (req) => ({
+    requestId: req.id,
+    service: SERVICE_NAME,
+    environment: ENVIRONMENT,
+    version: APP_VERSION
+  }),
+  customSuccessMessage: (req, res) => `request completed`,
+  customErrorMessage: (req, res, error) => `request failed`,
+  customLogLevel: (req, res, error) => {
+    if (error || res.statusCode >= 500) return "error";
+    if (res.statusCode >= 400) return "warn";
+    return "info";
+  }
+}));
+
 app.use((req, res, next) => {
-  res.on("finish", () => requests.inc({
-    method: req.method,
-    route: req.route?.path || req.path,
-    status_code: String(res.statusCode)
-  }));
+  const started = process.hrtime.bigint();
+  inFlight.inc();
+
+  res.on("finish", () => {
+    inFlight.dec();
+    if (req.path === "/metrics") return;
+
+    const route = req.route?.path || "unmatched";
+    const statusCode = String(res.statusCode);
+    const seconds = Number(process.hrtime.bigint() - started) / 1e9;
+    const labels = { method: req.method, route, status_code: statusCode };
+
+    requests.inc(labels);
+    duration.observe(labels, seconds);
+    if (res.statusCode >= 400) errors.inc(labels);
+  });
   next();
+});
+
+app.get("/health", (_req, res) => res.json({ status: "ok", service: SERVICE_NAME }));
+app.get("/metrics", async (_req, res) => {
+  res.set("Content-Type", register.contentType);
+  res.end(await register.metrics());
+});
+
+const jwt = require("jsonwebtoken");
+const Redis = require("ioredis");
+const { Pool } = require("pg");
+
+const checkout = new client.Counter({
+  name: "shopkart_orders_checkout_total",
+  help: "Checkout attempts",
+  labelNames: ["result"],
+  registers: [register]
+});
+
+const cartOperations = new client.Counter({
+  name: "shopkart_cart_operations_total",
+  help: "Cart operations",
+  labelNames: ["operation", "result"],
+  registers: [register]
 });
 
 const pool = process.env.NODE_ENV === "test"
@@ -37,14 +117,10 @@ const pool = process.env.NODE_ENV === "test"
       database: process.env.DB_NAME,
       user: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
-      ssl: {
-        rejectUnauthorized: false
-      }
+      ssl: { rejectUnauthorized: false }
     });
 
-const redis = process.env.NODE_ENV === "test"
-  ? null
-  : new Redis(process.env.REDIS_URL || "redis://redis:6379");
+const redis = process.env.NODE_ENV === "test" ? null : new Redis(process.env.REDIS_URL || "redis://redis:6379");
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 const CATALOG_URL = process.env.CATALOG_URL || "http://catalog-service:3002";
 
@@ -64,18 +140,15 @@ function cartKey(userId) {
   return `cart:${userId}`;
 }
 
-app.get("/health", (_req, res) => res.json({ status: "ok", service: "order-service" }));
-app.get("/metrics", async (_req, res) => {
-  res.set("Content-Type", register.contentType);
-  res.end(await register.metrics());
-});
 
 app.get("/cart", authRequired, async (req, res) => {
   try {
     const raw = process.env.NODE_ENV === "test" ? null : await redis.get(cartKey(req.user.sub));
+    cartOperations.inc({ operation: "get", result: "success" });
     res.json({ items: raw ? JSON.parse(raw) : [] });
   } catch (error) {
-    logger.error({ error }, "get cart failed");
+    logger.error({ err: error }, "get cart failed");
+    cartOperations.inc({ operation: "get", result: "error" });
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -100,9 +173,11 @@ app.post("/cart/items", authRequired, async (req, res) => {
     if (process.env.NODE_ENV !== "test") {
       await redis.set(cartKey(req.user.sub), JSON.stringify(items), "EX", 86400);
     }
+    cartOperations.inc({ operation: "add", result: "success" });
     res.status(201).json({ items });
   } catch (error) {
-    logger.error({ error }, "add cart item failed");
+    logger.error({ err: error }, "add cart item failed");
+    cartOperations.inc({ operation: "add", result: "error" });
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -121,9 +196,11 @@ app.delete("/cart/items/:productId", authRequired, async (req, res) => {
     if (process.env.NODE_ENV !== "test") {
       await redis.set(cartKey(req.user.sub), JSON.stringify(items), "EX", 86400);
     }
+    cartOperations.inc({ operation: "remove", result: "success" });
     res.json({ items });
   } catch (error) {
-    logger.error({ error }, "remove cart item failed");
+    logger.error({ err: error }, "remove cart item failed");
+    cartOperations.inc({ operation: "remove", result: "error" });
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -144,7 +221,7 @@ app.post("/orders", authRequired, async (req, res) => {
       items = req.body.items || [{ productId: 1, quantity: 1 }];
     }
 
-    if (!items.length) return res.status(400).json({ error: "Cart is empty" });
+    if (!items.length) { checkout.inc({ result: "empty_cart" }); return res.status(400).json({ error: "Cart is empty" }); }
 
     const products = [];
     let total = 0;
@@ -182,6 +259,7 @@ app.post("/orders", authRequired, async (req, res) => {
       }
       await clientConn.query("COMMIT");
       await redis.del(cartKey(req.user.sub));
+      checkout.inc({ result: "success" });
       res.status(201).json({ ...order.rows[0], items: products });
     } catch (e) {
       await clientConn.query("ROLLBACK");
@@ -190,7 +268,8 @@ app.post("/orders", authRequired, async (req, res) => {
       clientConn.release();
     }
   } catch (error) {
-    logger.error({ error }, "checkout failed");
+    logger.error({ err: error }, "checkout failed");
+    checkout.inc({ result: "error" });
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -207,7 +286,7 @@ app.get("/orders", authRequired, async (req, res) => {
     );
     res.json({ data: result.rows });
   } catch (error) {
-    logger.error({ error }, "order history failed");
+    logger.error({ err: error }, "order history failed");
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -236,7 +315,7 @@ app.get("/orders/:id", authRequired, async (req, res) => {
     );
     res.json({ ...order.rows[0], items: items.rows });
   } catch (error) {
-    logger.error({ error }, "order detail failed");
+    logger.error({ err: error }, "order detail failed");
     res.status(500).json({ error: "Internal server error" });
   }
 });
