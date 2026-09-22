@@ -14,7 +14,7 @@ jobs:
   test:
     name: Test Microservices
     runs-on: ubuntu-latest
-    
+    needs: gitleaks
 
     strategy:
       matrix:
@@ -22,7 +22,7 @@ jobs:
           - auth-service
           - catalog-service
           - order-service
-          - gitleaks
+          
 
     defaults:
       run:
