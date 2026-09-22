@@ -11,44 +11,8 @@ The platform is containerized with Docker and deployed to Amazon EKS using Helm 
 
 ## Architecture Overview
 
-```text
-                         ┌──────────────────┐
-                         │      Users       │
-                         └────────┬─────────┘
-                                  │
-                                  ▼
-                         ┌──────────────────┐
-                         │   AWS ALB /      │
-                         │     Ingress      │
-                         └────────┬─────────┘
-                                  │
-                                  ▼
-                         ┌──────────────────┐
-                         │ Frontend / Nginx │
-                         └────────┬─────────┘
-                                  │
-                ┌─────────────────┼─────────────────┐
-                │                 │                 │
-                ▼                 ▼                 ▼
-        ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-        │ Auth Service │  │   Catalog    │  │    Order     │
-        │    :3001     │  │   Service    │  │   Service    │
-        │              │  │    :3002     │  │    :3003     │
-        └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-               │                  │                  │
-               │                  │                  │
-               └──────────────────┼──────────────────┘
-                                  │
-                         ┌────────┴────────┐
-                         │                 │
-                         ▼                 ▼
-                  ┌──────────────┐  ┌──────────────┐
-                  │  PostgreSQL  │  │    Redis     │
-                  │    / RDS     │  │              │
-                  └──────────────┘  └──────────────┘
-````
+<img width="1536" height="1024" alt="ChatGPT Image Sep 22, 2026, 11_30_56 PM" src="https://github.com/user-attachments/assets/ebd33bdf-2958-4417-a66e-2a16049958f4" />
 
----
 
 # Project Objectives
 
