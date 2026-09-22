@@ -18,5 +18,5 @@ externalSecrets:
   jwt:
     secretName: jwt-secret
     refreshInterval: 1h
-    remoteKey: "arn:aws:secretsmanager:ap-south-1:905179308072:secret:jwt-secret-PamF8G"
+    remoteKey: "arn:aws:secretsmanager:ap-south-1:905179308072:secret:jwt-secret-PamF8G" # gitleaks:allow
      
