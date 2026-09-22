@@ -8,8 +8,8 @@
     "test:coverage": "jest --coverage --runInBand"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "ioredis": "^5.6.1",
+    "express": "^5.2.1",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "pino": "^9.9.0",
