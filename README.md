@@ -980,6 +980,3 @@ Focus Areas:
 * GitOps
 * Monitoring
 
-
-
-Next file should be **`Document/ARCHITECTURE.md`**.
