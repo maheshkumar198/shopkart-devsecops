@@ -22,6 +22,7 @@ jobs:
           - auth-service
           - catalog-service
           - order-service
+          - gitleaks
 
     defaults:
       run:
@@ -54,7 +55,9 @@ jobs:
     name: SonarQube Analysis
     continue-on-error: true
     runs-on: ubuntu-latest
-    needs: test
+    needs: 
+      - test
+      - gitleaks
     
     steps:
       - name: Checkout source
@@ -96,6 +99,7 @@ jobs:
     needs: 
       - test
       - sonarcube
+      - gitleaks
 
     strategy:
       fail-fast: false
@@ -165,6 +169,7 @@ jobs:
       - test
       - snyk
       - sonarcube
+      - gitleaks
 
     strategy:
       fail-fast: false
