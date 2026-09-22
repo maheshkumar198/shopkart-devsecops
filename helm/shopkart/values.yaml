@@ -110,8 +110,6 @@ frontend:
       cpu: 200m
       memory: 256Mi
 
-jwtSecret: dtqwqdiwqu1274214871572849217qwcuuiq1243146351278548712asdkgasduadsukfw
-
 monitoring:
   serviceMonitor:
     enabled: true
